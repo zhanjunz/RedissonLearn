@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.postman.utils.RedisUtil;
+
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -35,29 +37,30 @@ public class HelloWorldController {
 		System.out.println("redisKey " + redisKey);
 		RLock lock = redissonClient.getLock(redisKey);
 		boolean isLock = false;
-		try {
-//			isLock = lock.tryLock(2000, 5 * 1000, TimeUnit.MILLISECONDS);
-			isLock = lock.tryLock(2000, TimeUnit.MILLISECONDS);
+		// 加锁
+		// 过期时间8s
+		isLock = RedisUtil.lock(lock, 200, 8 * 1000);
 
-			System.out.println(lock.isLocked());
-			System.out.println("==================");
+		if (isLock) {
+			// 加锁成功
+			try {
+				// TODO business
+				System.out.println("业务代码");
+				Thread.sleep(2000);
+//				int a =1/0;
 
-			System.out.println(Thread.currentThread().getName() + " " + isLock);
-//			int a = 1 / 0;
-			Thread.sleep(5000);
-			System.out.println(lock.isLocked());
-
-		} catch (Exception e) {
-			log.error("get lock failed, exception {}", e.getMessage());
-			System.out.println("报错了");
-			isLock = false;
-			return isLock;
-		} finally {
-			lock.unlock();
-			System.out.println("解锁");
+				return true;
+//				RedisUtil.unLock(lock);
+			} catch (Exception e) {
+				// TODO: handle exception
+				RedisUtil.unLock(lock);
+				System.out.println("业务报错");
+				return false;
+			}
+		} else {
+			System.out.println("提交过快，稍后再试");
+			return false;
 		}
-		System.out.println("返回前锁的状态：" + lock.isLocked());
 
-		return isLock;
 	}
 }

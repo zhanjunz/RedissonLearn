@@ -32,7 +32,7 @@ public class RedissonConfig {
 		 *  默认30s
 		 *  监控锁的看门狗超时时间单位为毫秒。该参数只适用于分布式锁的加锁请求中未明确使用leaseTimeout参数的情况
 		 */
-		config.setLockWatchdogTimeout(2000L);
+//		config.setLockWatchdogTimeout(5000L);
 		RedissonClient client = null;
 		try {
 			client = Redisson.create(config);
